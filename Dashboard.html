@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة المبيعات اليومية</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #000; padding: 8px; }
+</style>
+</head>
+<body>
+  <h1>المبيعات اليومية</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>الوقت</th>
+        <th>السندويتش</th>
+        <th>السعر</th>
+      </tr>
+    </thead>
+    <tbody id="salesTable"></tbody>
+  </table>
+  <h2 id="totalSales">الإجمالي: 0 ريال</h2>
+  <button onclick="goBack()">العودة للقائمة</button>
+
+  <script>
+    const sales = JSON.parse(localStorage.getItem('dailySales') || '[]');
+    const table = document.getElementById('salesTable');
+    let total = 0;
+
+    sales.forEach(sale => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${sale.time}</td><td>${sale.item}</td><td>${sale.price}</td>`;
+      table.appendChild(tr);
+      total += sale.price;
+    });
+
+    document.getElementById('totalSales').textContent = "الإجمالي: " + total + " ريال";
+
+    function goBack() {
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
