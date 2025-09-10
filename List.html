@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قائمة الكاشير</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+  button { padding: 10px 20px; margin: 5px; font-size: 18px; cursor: pointer; }
+  #orderList { list-style: none; padding: 0; }
+</style>
+</head>
+<body>
+  <h1>اختر السندويتش</h1>
+
+  <button onclick="addOrder('نقانق')">نقانق</button>
+  <button onclick="addOrder('نقانق سمون')">نقانق سمون</button>
+  <button onclick="addOrder('بطاطا')">بطاطا</button>
+  <button onclick="addOrder('شيش')">شيش</button>
+  <button onclick="addOrder('شيش سمون')">شيش سمون</button>
+
+  <h2>طلبك الحالي:</h2>
+  <ul id="orderList"></ul>
+
+  <button onclick="finishOrder()">تم الدفع نقداً</button>
+  <button onclick="viewDashboard()">لوحة المبيعات اليومية</button>
+
+  <script>
+    let orders = [];
+    const prices = {
+      'نقانق': 10,
+      'نقانق سمون': 15,
+      'بطاطا': 8,
+      'شيش': 12,
+      'شيش سمون': 18
+    };
+
+    function addOrder(item) {
+      orders.push(item);
+      updateOrderList();
+    }
+
+    function updateOrderList() {
+      const list = document.getElementById('orderList');
+      list.innerHTML = '';
+      orders.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.textContent = item + " - " + prices[item] + " ريال";
+        list.appendChild(li);
+      });
+    }
+
+    function finishOrder() {
+      if (orders.length === 0) {
+        alert('لم يتم اختيار أي طلب!');
+        return;
+      }
+      // Save orders to daily sales
+      let sales = JSON.parse(localStorage.getItem('dailySales') || '[]');
+      orders.forEach(item => {
+        sales.push({item: item, price: prices[item], time: new Date().toLocaleString()});
+      });
+      localStorage.setItem('dailySales', JSON.stringify(sales));
+      alert('تم تسجيل الطلب بنجاح!');
+      orders = [];
+      updateOrderList();
+    }
+
+    function viewDashboard() {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>
