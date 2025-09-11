@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قائمة الكاشير</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h1>اختر السندويش</h1>
+
+  <div class="text-center mb-3" id="sandwichButtons"></div>
+
+  <h2>طلبك الحالي:</h2>
+  <ul id="orderList"></ul>
+  <h3 id="orderTotal">المجموع: 0 ليرة</h3>
+
+<button id="finishBtn" class="btn btn-success btn-lg d-block mx-auto my-4" 
+        style="font-size: 28px; padding: 25px 60px; border-radius: 15px;" 
+        onclick="finishOrder()">
+  تم الدفع نقداً
+</button>
+
+<div class="nav-buttons d-flex justify-content-center mt-4 mb-4 flex-wrap">
+  <button class="btn btn-primary m-1" onclick="viewDashboard()">لوحة المبيعات اليومية</button>
+  <button class="btn btn-secondary m-1" onclick="viewOrders()">صفحة الطلبات</button>
+  <button class="btn btn-info m-1" onclick="viewKitchen()">المطبخ</button>
+  <button class="btn btn-warning m-1" onclick="viewStock()">إدارة الأصناف</button>
+</div>
+
+<script>
+// تحميل الأصناف
+let prices = JSON.parse(localStorage.getItem('prices')) || {
+  'نقانق': 10000,
+  'نقانق سمون': 15000,
+  'بطاطا': 8000,
+  'شيش': 12000,
+  'شيش سمون': 18000
+};
+
+let orders = [];
+
+// إنشاء أزرار الأصناف
+function renderSandwichButtons() {
+  const container = document.getElementById('sandwichButtons');
+  container.innerHTML = '';
+  Object.keys(prices).forEach(item => {
+    let btn = document.createElement('button');
+    // كلاس أكبر وزر ممتد مع Bootstrap
+    btn.className = 'btn btn-outline-primary btn-lg m-2 px-4 py-3';
+    btn.textContent = `${item} - ${prices[item]} ليرة`;
+    btn.onclick = () => addOrder(item);
+    container.appendChild(btn);
+  });
+}
+
+function addOrder(item) {
+  let existing = orders.find(o => o.item === item);
+  if (existing) existing.qty++;
+  else orders.push({item: item, qty: 1});
+  updateOrderList();
+}
+
+function updateOrderList() {
+  const list = document.getElementById('orderList');
+  list.innerHTML = '';
+  let total = 0;
+  orders.forEach(order => {
+    const li = document.createElement('li');
+    li.textContent = `${order.item} × ${order.qty} - ${order.qty * prices[order.item]} ليرة`;
+    list.appendChild(li);
+    total += order.qty * prices[order.item];
+  });
+  document.getElementById('orderTotal').textContent = "المجموع: " + total + " ليرة";
+}
+
+function finishOrder() {
+  if (orders.length === 0) { alert('لم يتم اختيار أي طلب!'); return; }
+
+  // مفتاح اليوم الحالي
+  let today = new Date().toISOString().split('T')[0];
+  let key = "sales_" + today;
+
+  let sales = JSON.parse(localStorage.getItem(key) || '[]');
+  let pending = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
+
+  let id = sales.length + 1;
+  let total = orders.reduce((sum, o) => sum + o.qty * prices[o.item], 0);
+
+  let orderData = {
+    id: id,
+    items: orders,
+    total: total,
+    time: new Date().toLocaleString()
+  };
+
+  sales.push(orderData);
+  pending.push(orderData);
+
+  localStorage.setItem(key, JSON.stringify(sales));
+  localStorage.setItem('pendingOrders', JSON.stringify(pending));
+
+  alert('تم تسجيل الطلب بنجاح!');
+  orders = [];
+  updateOrderList();
+}
+
+function viewDashboard() { window.location.href = 'Dashboard.html'; }
+function viewOrders() { window.location.href = 'Orders.html'; }
+function viewKitchen() { window.location.href = 'Kitchen.html'; }
+function viewStock() { window.location.href = 'Stock.html'; }
+
+// تهيئة أزرار الأصناف
+renderSandwichButtons();
+</script>
+
+</body>
+</html>
+`
