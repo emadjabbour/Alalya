@@ -1,26 +1,72 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>المطبخ</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المطبخ</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  .order-box {
+    border: 2px solid #007bff;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 10px;
+    min-width: 220px;
+    max-width: 280px;
+    background: #f8f9fa;
+  }
+</style>
 </head>
 <body>
-  <h1>طلبات المطبخ</h1>
-  <div id="orders"></div>
 
-  <script>
-    async function loadOrders(){
-      let res = await fetch("https://script.google.com/macros/s/AKfycbzaUMk8kzIZx2KsCaA1VAnRrmtHc8cgfsZhVX3Dxl-ikcsfYCayNZgV6tQU5jZtdCA/exec");
-      let orders = await res.json();
-      let div = document.getElementById("orders");
-      div.innerHTML = "";
-      orders.forEach((o,i)=>{
-        div.innerHTML += `<p>طلب #${i+1}: ${o.order} <br> <small>${o.time}</small></p>`;
-      });
+<div class="container">
+  <h1 class="text-center my-3">📋 طلبات المطبخ</h1>
+  <div id="ordersContainer" class="d-flex flex-wrap justify-content-center"></div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzaUMk8kzIZx2KsCaA1VAnRrmtHc8cgfsZhVX3Dxl-ikcsfYCayNZgV6tQU5jZtdCA/exec";
+
+async function loadOrders() {
+  try {
+    let res = await fetch(SCRIPT_URL);
+    let data = await res.json();
+
+    const container = document.getElementById('ordersContainer');
+    container.innerHTML = '';
+
+    if (data.length === 0) {
+      container.innerHTML = "<h3>لا توجد طلبات حالياً ✅</h3>";
+      return;
     }
 
-    setInterval(loadOrders,5000);
-    loadOrders();
-  </script>
+    data.forEach(order => {
+      let div = document.createElement('div');
+      div.className = 'order-box';
+
+      div.innerHTML = `
+        <h4>طلب #${order.id}</h4>
+        <p>${order.items.replace(/, /g, "<br>")}</p>
+        <p><strong>المجموع: ${order.total} ل.س</strong></p>
+        <p><small>${order.time}</small></p>
+        <span class="badge bg-${order.status === "pending" ? "warning" : "success"}">
+          ${order.status}
+        </span>
+      `;
+
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('ordersContainer').innerHTML = "<p>⚠️ خطأ في تحميل الطلبات</p>";
+  }
+}
+
+// تحديث كل 5 ثوانٍ
+setInterval(loadOrders, 5000);
+loadOrders();
+</script>
+
 </body>
 </html>
