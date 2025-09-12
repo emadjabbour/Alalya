@@ -41,12 +41,22 @@ async function loadOrders() {
     }
 
     data.forEach(order => {
+      let itemsStr = "";
+      try {
+        // محاولة قراءة JSON من العمود items
+        let itemsArray = JSON.parse(order.items);
+        itemsStr = itemsArray.map(i => `${i.item} × ${i.qty}`).join("<br>");
+      } catch (e) {
+        // fallback لو كان نص عادي
+        itemsStr = order.items;
+      }
+
       let div = document.createElement('div');
       div.className = 'order-box';
 
       div.innerHTML = `
         <h4>طلب #${order.id}</h4>
-        <p>${order.items.replace(/, /g, "<br>")}</p>
+        <p>${itemsStr}</p>
         <p><strong>المجموع: ${order.total} ل.س</strong></p>
         <p><small>${order.time}</small></p>
         <span class="badge bg-${order.status === "pending" ? "warning" : "success"}">
