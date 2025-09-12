@@ -49,7 +49,6 @@ function renderSandwichButtons() {
   container.innerHTML = '';
   Object.keys(prices).forEach(item => {
     let btn = document.createElement('button');
-    // كلاس أكبر وزر ممتد مع Bootstrap
     btn.className = 'btn btn-outline-primary btn-lg m-2 px-4 py-3';
     btn.textContent = `${item} - ${prices[item]} ليرة`;
     btn.onclick = () => addOrder(item);
@@ -77,10 +76,21 @@ function updateOrderList() {
   document.getElementById('orderTotal').textContent = "المجموع: " + total + " ليرة";
 }
 
+// ✅ Send order to Google Sheets
+function sendOrderToGoogleSheet(orderData){
+  fetch("https://script.google.com/macros/s/AKfycbwSj4koN2ISIf2RDBLLnoT3BHrA-A0owF_wwDoA_mAqIVD97CziIopzzkWaxwgmWFvo/exec", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(orderData)
+  })
+  .then(res => res.json())
+  .then(data => console.log("Order sent:", data))
+  .catch(err => console.error("Error sending order:", err));
+}
+
 function finishOrder() {
   if (orders.length === 0) { alert('لم يتم اختيار أي طلب!'); return; }
 
-  // مفتاح اليوم الحالي
   let today = new Date().toISOString().split('T')[0];
   let key = "sales_" + today;
 
@@ -103,6 +113,9 @@ function finishOrder() {
   localStorage.setItem(key, JSON.stringify(sales));
   localStorage.setItem('pendingOrders', JSON.stringify(pending));
 
+  // ✅ Send order to Google Sheets
+  sendOrderToGoogleSheet(orderData);
+
   alert('تم تسجيل الطلب بنجاح!');
   orders = [];
   updateOrderList();
@@ -113,10 +126,8 @@ function viewOrders() { window.location.href = 'Orders.html'; }
 function viewKitchen() { window.location.href = 'Kitchen.html'; }
 function viewStock() { window.location.href = 'Stock.html'; }
 
-// تهيئة أزرار الأصناف
 renderSandwichButtons();
 </script>
 
 </body>
 </html>
-`
