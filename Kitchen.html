@@ -9,6 +9,9 @@
 </head>
 <body>
 
+<!-- ✅ Bell audio -->
+<audio id="orderBell" src="bell.mp3" preload="auto"></audio>
+
 <div class="container">
 <h1>طلبات المطبخ</h1>
 <div id="ordersContainer" class="d-flex flex-wrap justify-content-center"></div>
@@ -21,10 +24,20 @@
 </div>
 
 <script>
+// keep track of previous pending orders
+let lastOrderCount = 0;
+
 function loadOrders() {
   const container = document.getElementById('ordersContainer');
   container.innerHTML = '';
   let pending = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
+
+  // ✅ Play bell if new order came
+  if(pending.length > lastOrderCount){
+    document.getElementById('orderBell').play();
+  }
+  lastOrderCount = pending.length;
+
   pending.forEach(order => {
     const div = document.createElement('div');
     div.className = 'order-box';
@@ -35,7 +48,10 @@ function loadOrders() {
                      <button class="btn btn-danger btn-sm mt-2" onclick="finishPrep(${order.id})">تم التحضير</button>`;
     container.appendChild(div);
   });
-  if(pending.length===0){ container.innerHTML="<h2>لا توجد طلبات حالياً ✅</h2>"; }
+
+  if(pending.length===0){ 
+    container.innerHTML="<h2>لا توجد طلبات حالياً ✅</h2>"; 
+  }
 }
 
 function finishPrep(orderId) {
@@ -45,13 +61,13 @@ function finishPrep(orderId) {
   loadOrders();
 }
 
+// refresh orders every 5 seconds
 setInterval(loadOrders,5000);
 loadOrders();
 
 function goCashier(){ window.location.href='index.html'; }
 function goOrders(){ window.location.href='Orders.html'; }
 function goDashboard(){ window.location.href='Dashboard.html'; }
-
 </script>
 </body>
 </html>
