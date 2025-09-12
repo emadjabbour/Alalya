@@ -1,49 +1,26 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>المطبخ</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>المطبخ</title>
 </head>
 <body>
-
-<div class="container">
   <h1>طلبات المطبخ</h1>
-  <div id="ordersContainer" class="d-flex flex-wrap justify-content-center"></div>
-</div>
+  <div id="orders"></div>
 
-<script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzaUMk8kzIZx2KsCaA1VAnRrmtHc8cgfsZhVX3Dxl-ikcsfYCayNZgV6tQU5jZtdCA/exec";
-
-function loadOrders() {
-  fetch(SCRIPT_URL)
-    .then(res => res.json())
-    .then(data => {
-      const container = document.getElementById('ordersContainer');
-      container.innerHTML = '';
-      let pending = data.filter(o => o.status === "pending");
-
-      pending.forEach(order => {
-        const div = document.createElement('div');
-        div.className = 'order-box border p-3 m-2';
-        div.innerHTML = `
-          <h3>طلب #${order.id}</h3>
-          <p>${order.items}</p>
-          <p><strong>المجموع: ${order.total} ليرة</strong></p>
-        `;
-        container.appendChild(div);
+  <script>
+    async function loadOrders(){
+      let res = await fetch("https://script.google.com/macros/s/AKfycbzaUMk8kzIZx2KsCaA1VAnRrmtHc8cgfsZhVX3Dxl-ikcsfYCayNZgV6tQU5jZtdCA/exec");
+      let orders = await res.json();
+      let div = document.getElementById("orders");
+      div.innerHTML = "";
+      orders.forEach((o,i)=>{
+        div.innerHTML += `<p>طلب #${i+1}: ${o.order} <br> <small>${o.time}</small></p>`;
       });
+    }
 
-      if (pending.length === 0) {
-        container.innerHTML = "<h2>لا توجد طلبات حالياً ✅</h2>";
-      }
-    })
-    .catch(err => console.error("خطأ: ", err));
-}
-
-setInterval(loadOrders, 5000);
-loadOrders();
-</script>
+    setInterval(loadOrders,5000);
+    loadOrders();
+  </script>
 </body>
 </html>
