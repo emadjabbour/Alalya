@@ -8,66 +8,67 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<!-- ✅ Bell audio -->
 <audio id="orderBell" src="bell.mp3" preload="auto"></audio>
 
 <div class="container">
-<h1>طلبات المطبخ</h1>
-<div id="ordersContainer" class="d-flex flex-wrap justify-content-center"></div>
+  <h1>طلبات المطبخ</h1>
+  <div id="ordersContainer" class="d-flex flex-wrap justify-content-center"></div>
 </div>
 
 <div class="nav-bar">
-<button onclick="goCashier()">الكاشير</button>
-<button onclick="goOrders()">جميع الطلبات</button>
-<button onclick="goDashboard()">لوحة المبيعات</button>
+  <button onclick="goCashier()">الكاشير</button>
+  <button onclick="goOrders()">جميع الطلبات</button>
+  <button onclick="goDashboard()">لوحة المبيعات</button>
 </div>
 
 <script>
-// keep track of previous pending orders
+const SCRIPT_URL = "AKfycbwSj4koN2ISIf2RDBLLnoT3BHrA-A0owF_wwDoA_mAqIVD97CziIopzzkWaxwgmWFvo"; // replace with your deployed Apps Script URL
 let lastOrderCount = 0;
 
-function loadOrders() {
-  const container = document.getElementById('ordersContainer');
-  container.innerHTML = '';
-  let pending = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
+async function loadOrders() {
+  try {
+    const res = await fetch(SCRIPT_URL);
+    const pending = await res.json();
+    const container = document.getElementById('ordersContainer');
+    container.innerHTML = '';
 
-  // ✅ Play bell if new order came
-  if(pending.length > lastOrderCount){
-    document.getElementById('orderBell').play();
-  }
-  lastOrderCount = pending.length;
+    // play bell if new order
+    if(pending.length > lastOrderCount) document.getElementById('orderBell').play();
+    lastOrderCount = pending.length;
 
-  pending.forEach(order => {
-    const div = document.createElement('div');
-    div.className = 'order-box';
-    let itemsStr = order.items.map(i => `${i.item} × ${i.qty}`).join("<br>");
-    div.innerHTML = `<h3>طلب #${order.id}</h3>
-                     <p>${itemsStr}</p>
-                     <p><strong>المجموع: ${order.total} ليرة</strong></p>
-                     <button class="btn btn-danger btn-sm mt-2" onclick="finishPrep(${order.id})">تم التحضير</button>`;
-    container.appendChild(div);
-  });
+    pending.forEach(order => {
+      const div = document.createElement('div');
+      div.className = 'order-box';
+      let itemsStr = order.items.map(i=>`${i.item} × ${i.qty}`).join("<br>");
+      div.innerHTML = `<h3>طلب #${order.id}</h3>
+                       <p>${itemsStr}</p>
+                       <p><strong>المجموع: ${order.total} ليرة</strong></p>
+                       <button class="btn btn-danger btn-sm mt-2" onclick="finishPrep(${order.id})">تم التحضير</button>`;
+      container.appendChild(div);
+    });
 
-  if(pending.length===0){ 
-    container.innerHTML="<h2>لا توجد طلبات حالياً ✅</h2>"; 
+    if(pending.length===0) container.innerHTML="<h2>لا توجد طلبات حالياً ✅</h2>";
+  } catch(err) {
+    console.error("Failed to load orders:", err);
   }
 }
 
-function finishPrep(orderId) {
-  let pending = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
-  pending = pending.filter(o => o.id!==orderId);
-  localStorage.setItem('pendingOrders', JSON.stringify(pending));
-  loadOrders();
+// mark order as prepared
+async function finishPrep(orderId) {
+  try {
+    // call Apps Script function via GET + query param
+    await fetch(`${SCRIPT_URL}?method=markPrepared&orderId=${orderId}`);
+    loadOrders();
+  } catch(err) { console.error(err); }
 }
 
-// refresh orders every 5 seconds
-setInterval(loadOrders,5000);
+// refresh orders every 5s
+setInterval(loadOrders, 5000);
 loadOrders();
 
-function goCashier(){ window.location.href='index.html'; }
-function goOrders(){ window.location.href='Orders.html'; }
-function goDashboard(){ window.location.href='Dashboard.html'; }
+function goCashier() { window.location.href='index.html'; }
+function goOrders() { window.location.href='Orders.html'; }
+function goDashboard() { window.location.href='Dashboard.html'; }
 </script>
 </body>
 </html>
