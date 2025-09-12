@@ -3,55 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>المطبخ</title>
+<title>طلبات المطبخ</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-<h1>طلبات المطبخ</h1>
-<div id="ordersContainer" class="d-flex flex-wrap justify-content-center"></div>
-</div>
-
-<div class="nav-bar">
-<button onclick="goCashier()">الكاشير</button>
-<button onclick="goOrders()">جميع الطلبات</button>
-<button onclick="goDashboard()">لوحة المبيعات</button>
+  <h1>طلبات المطبخ</h1>
+  <div id="ordersContainer" class="d-flex flex-wrap justify-content-center"></div>
 </div>
 
 <script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbze-2mORZyRdWhAlGOH3j3mhYm22pAzfYCalbOOs7r17Edo3evDLgqPTY9edgh4m0Rb/exec"; // نفس رابط الويب آب
+
 function loadOrders() {
-  const container = document.getElementById('ordersContainer');
-  container.innerHTML = '';
-  let pending = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
-  pending.forEach(order => {
-    const div = document.createElement('div');
-    div.className = 'order-box';
-    let itemsStr = order.items.map(i => `${i.item} × ${i.qty}`).join("<br>");
-    div.innerHTML = `<h3>طلب #${order.id}</h3>
-                     <p>${itemsStr}</p>
-                     <p><strong>المجموع: ${order.total} ليرة</strong></p>
-                     <button class="btn btn-danger btn-sm mt-2" onclick="finishPrep(${order.id})">تم التحضير</button>`;
-    container.appendChild(div);
-  });
-  if(pending.length===0){ container.innerHTML="<h2>لا توجد طلبات حالياً ✅</h2>"; }
+  fetch(WEBAPP_URL)
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById('ordersContainer');
+      container.innerHTML = '';
+      let pending = data.filter(o => o.status === "pending");
+      
+      pending.forEach(order => {
+        const div = document.createElement('div');
+        div.className = 'border rounded p-3 m-2';
+        let itemsStr = order.items.map(i => `${i.item} × ${i.qty}`).join("<br>");
+        div.innerHTML = `<h3>طلب #${order.id}</h3>
+                         <p>${itemsStr}</p>
+                         <p><strong>المجموع: ${order.total} ليرة</strong></p>`;
+        container.appendChild(div);
+      });
+
+      if (pending.length === 0) {
+        container.innerHTML = "<h2>لا توجد طلبات حالياً ✅</h2>";
+      }
+    });
 }
 
-function finishPrep(orderId) {
-  let pending = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
-  pending = pending.filter(o => o.id!==orderId);
-  localStorage.setItem('pendingOrders', JSON.stringify(pending));
-  loadOrders();
-}
-
-setInterval(loadOrders,5000);
+setInterval(loadOrders, 5000);
 loadOrders();
-
-function goCashier(){ window.location.href='index.html'; }
-function goOrders(){ window.location.href='Orders.html'; }
-function goDashboard(){ window.location.href='Dashboard.html'; }
-
 </script>
 </body>
 </html>
