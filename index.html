@@ -8,31 +8,30 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="container">
   <h1>اختر السندويش</h1>
-
   <div class="text-center mb-3" id="sandwichButtons"></div>
 
   <h2>طلبك الحالي:</h2>
   <ul id="orderList"></ul>
   <h3 id="orderTotal">المجموع: 0 ليرة</h3>
 
-<button id="finishBtn" class="btn btn-success btn-lg d-block mx-auto my-4" 
-        style="font-size: 28px; padding: 25px 60px; border-radius: 15px;" 
-        onclick="finishOrder()">
-  تم الدفع نقداً
-</button>
+  <button id="finishBtn" class="btn btn-success btn-lg d-block mx-auto my-4"
+          style="font-size: 28px; padding: 25px 60px; border-radius: 15px;"
+          onclick="finishOrder()">
+    تم الدفع نقداً
+  </button>
 
-<div class="nav-buttons d-flex justify-content-center mt-4 mb-4 flex-wrap">
-  <button class="btn btn-primary m-1" onclick="viewDashboard()">لوحة المبيعات اليومية</button>
-  <button class="btn btn-secondary m-1" onclick="viewOrders()">صفحة الطلبات</button>
-  <button class="btn btn-info m-1" onclick="viewKitchen()">المطبخ</button>
-  <button class="btn btn-warning m-1" onclick="viewStock()">إدارة الأصناف</button>
+  <div class="nav-buttons d-flex justify-content-center mt-4 mb-4 flex-wrap">
+    <button class="btn btn-primary m-1" onclick="viewDashboard()">لوحة المبيعات اليومية</button>
+    <button class="btn btn-secondary m-1" onclick="viewOrders()">صفحة الطلبات</button>
+    <button class="btn btn-info m-1" onclick="viewKitchen()">المطبخ</button>
+    <button class="btn btn-warning m-1" onclick="viewStock()">إدارة الأصناف</button>
+  </div>
 </div>
 
 <script>
-// تحميل الأصناف
+const SCRIPT_URL = "AKfycbwSj4koN2ISIf2RDBLLnoT3BHrA-A0owF_wwDoA_mAqIVD97CziIopzzkWaxwgmWFvo"; // replace with your deployed Apps Script URL
 let prices = JSON.parse(localStorage.getItem('prices')) || {
   'نقانق': 10000,
   'نقانق سمون': 15000,
@@ -40,10 +39,8 @@ let prices = JSON.parse(localStorage.getItem('prices')) || {
   'شيش': 12000,
   'شيش سمون': 18000
 };
-
 let orders = [];
 
-// إنشاء أزرار الأصناف
 function renderSandwichButtons() {
   const container = document.getElementById('sandwichButtons');
   container.innerHTML = '';
@@ -58,7 +55,7 @@ function renderSandwichButtons() {
 
 function addOrder(item) {
   let existing = orders.find(o => o.item === item);
-  if (existing) existing.qty++;
+  if(existing) existing.qty++;
   else orders.push({item: item, qty: 1});
   updateOrderList();
 }
@@ -76,58 +73,42 @@ function updateOrderList() {
   document.getElementById('orderTotal').textContent = "المجموع: " + total + " ليرة";
 }
 
-// ✅ Send order to Google Sheets
-function sendOrderToGoogleSheet(orderData){
-  fetch("https://script.google.com/macros/s/AKfycbwSj4koN2ISIf2RDBLLnoT3BHrA-A0owF_wwDoA_mAqIVD97CziIopzzkWaxwgmWFvo/exec", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(orderData)
-  })
-  .then(res => res.json())
-  .then(data => console.log("Order sent:", data))
-  .catch(err => console.error("Error sending order:", err));
-}
-
-function finishOrder() {
-  if (orders.length === 0) { alert('لم يتم اختيار أي طلب!'); return; }
+async function finishOrder() {
+  if(orders.length === 0) { alert('لم يتم اختيار أي طلب!'); return; }
 
   let today = new Date().toISOString().split('T')[0];
   let key = "sales_" + today;
-
   let sales = JSON.parse(localStorage.getItem(key) || '[]');
-  let pending = JSON.parse(localStorage.getItem('pendingOrders') || '[]');
-
   let id = sales.length + 1;
-  let total = orders.reduce((sum, o) => sum + o.qty * prices[o.item], 0);
+  let total = orders.reduce((sum,o)=>sum + o.qty * prices[o.item], 0);
 
-  let orderData = {
-    id: id,
-    items: orders,
-    total: total,
-    time: new Date().toLocaleString()
-  };
+  let orderData = {id, items: orders, total, time: new Date().toLocaleString()};
 
+  // save locally
   sales.push(orderData);
-  pending.push(orderData);
-
   localStorage.setItem(key, JSON.stringify(sales));
-  localStorage.setItem('pendingOrders', JSON.stringify(pending));
 
-  // ✅ Send order to Google Sheets
-  sendOrderToGoogleSheet(orderData);
+  // send to Google Sheets
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(orderData)
+    });
+  } catch(err) {
+    console.error("Failed to send order to Google Sheets:", err);
+  }
 
   alert('تم تسجيل الطلب بنجاح!');
   orders = [];
   updateOrderList();
 }
 
-function viewDashboard() { window.location.href = 'Dashboard.html'; }
-function viewOrders() { window.location.href = 'Orders.html'; }
-function viewKitchen() { window.location.href = 'Kitchen.html'; }
-function viewStock() { window.location.href = 'Stock.html'; }
+function viewDashboard() { window.location.href='Dashboard.html'; }
+function viewOrders() { window.location.href='Orders.html'; }
+function viewKitchen() { window.location.href='Kitchen.html'; }
+function viewStock() { window.location.href='Stock.html'; }
 
 renderSandwichButtons();
 </script>
-
 </body>
 </html>
