@@ -10,7 +10,6 @@
 
 <div class="container">
   <h1>اختر السندويش</h1>
-
   <div class="text-center mb-3" id="sandwichButtons"></div>
 
   <h2>طلبك الحالي:</h2>
@@ -25,7 +24,7 @@
 </div>
 
 <script>
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzaUMk8kzIZx2KsCaA1VAnRrmtHc8cgfsZhVX3Dxl-ikcsfYCayNZgV6tQU5jZtdCA/exec"; // ضع رابط الويب آب هنا
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzaUMk8kzIZx2KsCaA1VAnRrmtHc8cgfsZhVX3Dxl-ikcsfYCayNZgV6tQU5jZtdCA/exec";
 
 let prices = {
   'نقانق': 10000,
@@ -73,6 +72,7 @@ function finishOrder() {
   if (orders.length === 0) { alert('لم يتم اختيار أي طلب!'); return; }
 
   let total = orders.reduce((sum, o) => sum + o.qty * prices[o.item], 0);
+
   let orderData = {
     id: Date.now(),
     items: orders,
@@ -80,17 +80,18 @@ function finishOrder() {
     time: new Date().toLocaleString()
   };
 
-  fetch(WEBAPP_URL, {
+  fetch(SCRIPT_URL, {
     method: "POST",
-    body: JSON.stringify(orderData)
+    body: JSON.stringify(orderData),
+    headers: { "Content-Type": "application/json" }
   })
   .then(res => res.text())
-  .then(msg => {
-    alert("تم إرسال الطلب للمطبخ ✅");
+  .then(res => {
+    alert('تم تسجيل الطلب بنجاح!');
     orders = [];
     updateOrderList();
   })
-  .catch(err => alert("Error: " + err));
+  .catch(err => alert("خطأ: " + err));
 }
 
 renderSandwichButtons();
