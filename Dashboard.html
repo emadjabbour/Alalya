@@ -33,12 +33,17 @@
 
 <div class="nav-buttons text-center">
 <button class="btn btn-primary me-2" onclick="goBack()">العودة للقائمة</button>
-<button class="btn btn-danger" onclick="resetSales()">مسح المبيعات</button>
+<button class="btn btn-danger me-2" onclick="resetSales()">مسح المبيعات</button>
+<!-- ✅ New buttons -->
+<button class="btn btn-success me-2" onclick="exportSales()">تصدير المبيعات</button>
+<input type="file" id="importFile" class="d-none" accept=".json" onchange="importSales(event)">
+<button class="btn btn-info" onclick="document.getElementById('importFile').click()">استيراد المبيعات</button>
 </div>
 </div>
 
 <script>
 function getToday(){ return new Date().toISOString().split('T')[0]; }
+
 function loadSales(date=null){
   let day = date || getToday();
   document.getElementById('salesDate').value = day;
@@ -53,7 +58,9 @@ function loadSales(date=null){
   });
   document.getElementById('totalSales').textContent="الإجمالي: "+total+" ليرة";
 }
+
 function goBack(){ window.location.href='index.html'; }
+
 function resetSales(){
   let day=document.getElementById('salesDate').value || getToday();
   if(confirm(`هل تريد مسح جميع مبيعات ${day}؟`)){
@@ -61,6 +68,41 @@ function resetSales(){
     loadSales(day);
   }
 }
+
+/* ✅ Export sales for selected day */
+function exportSales(){
+  let day=document.getElementById('salesDate').value || getToday();
+  const sales = JSON.parse(localStorage.getItem("sales_"+day) || '[]');
+  const blob = new Blob([JSON.stringify(sales, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download="sales_"+day+".json"; // auto filename
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ✅ Import sales file */
+function importSales(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      // get date from filename if possible
+      let match=file.name.match(/sales_(\d{4}-\d{2}-\d{2})\.json/);
+      let day = match ? match[1] : getToday();
+      localStorage.setItem("sales_"+day, JSON.stringify(data));
+      alert("تم استيراد المبيعات لليوم: "+day);
+      loadSales(day);
+    }catch(err){
+      alert("الملف غير صالح");
+    }
+  };
+  reader.readAsText(file);
+}
+
 document.getElementById("salesDate").addEventListener("change",function(){ loadSales(this.value); });
 loadSales();
 </script>
